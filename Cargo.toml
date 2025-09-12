@@ -1,0 +1,18 @@
+[package]
+name = "ftmi"
+version = "0.1.0"
+edition = "2021"
+authors = ["Your Name <your.email@example.com>"]
+description = "A Rust-based file renaming utility"
+repository = "https://github.com/ben-haware/FTMI"
+license-file = "LICENSE"
+readme = "README.md"
+keywords = ["file", "rename", "utility", "cli"]
+categories = ["command-line-utilities"]
+
+[package.metadata.binstall]
+pkg-url = "{ repo }/releases/download/v{ version }/{ name }-{ target }{ binary-ext }"
+bin-dir = "{ bin }{ binary-ext }"
+pkg-fmt = "bin"
+
+[dependencies]
