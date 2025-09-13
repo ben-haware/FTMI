@@ -1,0 +1,16 @@
+I was working on my project today and noticed that the main configuration file at /etc/nginx/nginx.conf needed updating. The error logs were accumulating in /var/log/nginx/error.log, so I decided to check them out. 
+
+On my Windows machine, I have a backup stored at "C:\Users\JohnDoe\Documents\ProjectBackup\2024" and another copy on the network share at "\\fileserver\shared\projects\webapp". 
+
+The build script ./scripts/build.sh references several important files:
+- The source code in ./src/main.rs
+- Configuration at ../config/app.yaml
+- Output directory /home/user/projects/webapp/dist/
+
+I also found these paths in the documentation:
+* Database backups: /var/backups/postgresql/
+* SSL certificates: /etc/ssl/certs/webapp.crt
+* Windows temp files: C:\Windows\Temp\app_cache\
+* Mac application: /Applications/WebApp.app/Contents/MacOS/webapp
+
+The deployment guide mentions uploading files to /srv/www/html/public and ensuring the logs directory at /srv/www/html/logs has proper permissions. Don't forget to check ~/.ssh/config for your SSH settings and ~/Documents/deployment-keys/ for your credentials.
