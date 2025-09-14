@@ -37,7 +37,7 @@ install-cargo:
 install-binstall:
 	@echo "Checking for cargo-binstall..."
 	@if command -v cargo-binstall >/dev/null 2>&1; then \
-		echo "cargo-binstall is already installed: $$(cargo-binstall --version)"; \
+		echo "cargo-binstall is already installed: $$(cargo binstall --version)"; \
 	else \
 		echo "Installing cargo-binstall..."; \
 		curl -L --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | bash; \
