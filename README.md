@@ -2,6 +2,12 @@
 
 FTMI is a Rust-based file manipulation utility focused on detecting and managing file prefixes. It provides powerful tools for analyzing file naming patterns and preparing bulk rename operations.
 
+## Quick Install
+
+```bash
+git clone https://github.com/ben-haware/FTMI && cd FTMI && make install
+```
+
 ## Features
 
 ### 🔍 Path Extraction

@@ -11,19 +11,15 @@ env:
 jobs:
   create-release:
     runs-on: ubuntu-latest
-    outputs:
-      upload_url: ${{ steps.create_release.outputs.upload_url }}
     steps:
+      - uses: actions/checkout@v4
       - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
+        run: |
+          gh release create ${{ github.ref_name }} \
+            --title "Release ${{ github.ref_name }}" \
+            --generate-notes
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
-          draft: false
-          prerelease: false
 
   build:
     needs: create-release
@@ -54,7 +50,7 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
@@ -69,14 +65,11 @@ jobs:
       run: cargo build --release --target ${{ matrix.target }}
 
     - name: Upload Release Asset
-      uses: actions/upload-release-asset@v1
+      run: |
+        gh release upload ${{ github.ref_name }} \
+          ./target/${{ matrix.target }}/release/${{ matrix.artifact_name }}#${{ matrix.asset_name }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ needs.create-release.outputs.upload_url }}
-        asset_path: ./target/${{ matrix.target }}/release/${{ matrix.artifact_name }}
-        asset_name: ${{ matrix.asset_name }}
-        asset_content_type: application/octet-stream
 
     - name: Generate cargo-binstall metadata
       run: |
@@ -92,7 +85,7 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
