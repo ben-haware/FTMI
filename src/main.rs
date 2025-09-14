@@ -1,5 +1,5 @@
-use ftmi::process_directories_from_stdin;
+use ftmi::process_directories_longest_prefix;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    process_directories_from_stdin()
+    process_directories_longest_prefix()
 }

@@ -49,6 +49,12 @@ pub struct CommonPrefix {
     pub files: Vec<String>,
 }
 
+#[derive(Debug, Clone, PartialEq)]
+pub struct PrefixedPath {
+    pub paths: Vec<std::path::PathBuf>,
+    pub prefix: String,
+}
+
 pub fn find_common_prefix(directory: &Path, options: &PrefixOptions) -> Result<Vec<CommonPrefix>, std::io::Error> {
     let mut prefix_map: HashMap<String, Vec<String>> = HashMap::new();
     let mut delimiter_prefix_map: HashMap<(String, Option<(String, String)>), Vec<String>> = HashMap::new();
@@ -291,6 +297,61 @@ pub fn remove_prefix_with_delimiter(filename: &str, prefix: &str, open: &str, cl
     } else {
         filename.to_string()
     }
+}
+
+/// Find the longest matching prefixes for a directory and return structured results
+/// Uses default regex pattern [.*] for bracket-delimited prefixes
+/// Returns multiple results if there are ties in occurrence count
+pub fn find_longest_prefix(directory: &Path, options: &PrefixOptions) -> Result<Vec<PrefixedPath>, std::io::Error> {
+    let all_prefixes = find_common_prefix(directory, options)?;
+    
+    if all_prefixes.is_empty() {
+        return Ok(Vec::new());
+    }
+    
+    // Filter to only bracket-delimited prefixes
+    let bracket_prefixes: Vec<&CommonPrefix> = all_prefixes.iter()
+        .filter(|prefix| {
+            prefix.delimiter.as_ref()
+                .map(|(open, close)| open == "[" && close == "]")
+                .unwrap_or(false)
+        })
+        .collect();
+    
+    let candidates = if !bracket_prefixes.is_empty() {
+        bracket_prefixes
+    } else {
+        // Fall back to any prefix if no bracket prefixes found
+        all_prefixes.iter().collect()
+    };
+    
+    // Find the maximum occurrence count
+    let max_occurrences = candidates.iter()
+        .map(|prefix| prefix.occurrences)
+        .max()
+        .unwrap_or(0);
+    
+    // Collect all prefixes with the maximum occurrence count
+    let best_prefixes: Vec<&CommonPrefix> = candidates.iter()
+        .filter(|prefix| prefix.occurrences == max_occurrences)
+        .cloned()
+        .collect();
+    
+    // Convert to PrefixedPath results
+    let results: Vec<PrefixedPath> = best_prefixes.iter()
+        .map(|prefix| {
+            let paths: Vec<std::path::PathBuf> = prefix.files.iter()
+                .map(|filename| directory.join(filename))
+                .collect();
+            
+            PrefixedPath {
+                paths,
+                prefix: prefix.prefix.clone(),
+            }
+        })
+        .collect();
+    
+    Ok(results)
 }
 
 #[cfg(test)]
