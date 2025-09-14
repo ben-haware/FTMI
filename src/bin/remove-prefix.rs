@@ -55,6 +55,7 @@ fn auto_detect_and_preview(dir_path: &str) -> Result<(), Box<dyn std::error::Err
             ],
         },
         min_occurrences: 1,
+        filter_regex: None, // No additional regex filtering
     };
     
     let prefixes = find_common_prefix(path, &options)?;

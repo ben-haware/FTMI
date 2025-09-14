@@ -4,18 +4,7 @@ use std::path::Path;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let stdin = io::stdin();
-    let options = PrefixOptions {
-        mode: PrefixMode::DetectAll {
-            delimiters: vec![
-                ("(".to_string(), ")".to_string()),
-                ("[".to_string(), "]".to_string()),
-                ("{".to_string(), "}".to_string()),
-                ("\"".to_string(), "\"".to_string()),
-                ("'".to_string(), "'".to_string()),
-            ],
-        },
-        min_occurrences: 2,
-    };
+    let options = PrefixOptions::no_filter(); // Detect all without regex filtering
     
     for line in stdin.lock().lines() {
         let dir_path = line?;

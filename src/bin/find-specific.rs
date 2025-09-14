@@ -18,6 +18,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let options = PrefixOptions {
         mode: PrefixMode::SpecificPrefixes { prefixes },
         min_occurrences: 1, // For specific prefixes, we might want to see single matches
+        filter_regex: None, // No additional regex filtering
     };
     
     for line in stdin.lock().lines() {

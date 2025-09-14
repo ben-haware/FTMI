@@ -1,6 +1,7 @@
 use std::fs;
 use std::path::Path;
 use std::collections::HashMap;
+use regex::Regex;
 
 #[derive(Debug, Clone)]
 pub enum PrefixMode {
@@ -22,6 +23,8 @@ pub enum PrefixMode {
 pub struct PrefixOptions {
     pub mode: PrefixMode,
     pub min_occurrences: usize,
+    /// Regex pattern to filter prefixes (e.g., r"\[.*\]" for bracket-delimited prefixes)
+    pub filter_regex: Option<String>,
 }
 
 impl Default for PrefixOptions {
@@ -37,6 +40,41 @@ impl Default for PrefixOptions {
                 ],
             },
             min_occurrences: 2,
+            filter_regex: Some(r"\[.*\]".to_string()), // Default to bracket-delimited prefixes
+        }
+    }
+}
+
+impl PrefixOptions {
+    /// Create options with a custom regex filter
+    pub fn with_regex(regex_pattern: &str) -> Self {
+        Self {
+            filter_regex: Some(regex_pattern.to_string()),
+            ..Default::default()
+        }
+    }
+    
+    /// Create options with no regex filter (accept all prefixes)
+    pub fn no_filter() -> Self {
+        Self {
+            filter_regex: None,
+            ..Default::default()
+        }
+    }
+    
+    /// Create options for bracket-delimited prefixes specifically
+    pub fn bracket_only() -> Self {
+        Self {
+            filter_regex: Some(r"\[.*\]".to_string()),
+            ..Default::default()
+        }
+    }
+    
+    /// Create options for parentheses-delimited prefixes
+    pub fn paren_only() -> Self {
+        Self {
+            filter_regex: Some(r"\(.*\)".to_string()),
+            ..Default::default()
         }
     }
 }
@@ -300,7 +338,7 @@ pub fn remove_prefix_with_delimiter(filename: &str, prefix: &str, open: &str, cl
 }
 
 /// Find the longest matching prefixes for a directory and return structured results
-/// Uses default regex pattern [.*] for bracket-delimited prefixes
+/// Uses configurable regex pattern to filter prefixes 
 /// Returns multiple results if there are ties in occurrence count
 pub fn find_longest_prefix(directory: &Path, options: &PrefixOptions) -> Result<Vec<PrefixedPath>, std::io::Error> {
     let all_prefixes = find_common_prefix(directory, options)?;
@@ -309,19 +347,35 @@ pub fn find_longest_prefix(directory: &Path, options: &PrefixOptions) -> Result<
         return Ok(Vec::new());
     }
     
-    // Filter to only bracket-delimited prefixes
-    let bracket_prefixes: Vec<&CommonPrefix> = all_prefixes.iter()
-        .filter(|prefix| {
-            prefix.delimiter.as_ref()
-                .map(|(open, close)| open == "[" && close == "]")
-                .unwrap_or(false)
-        })
-        .collect();
-    
-    let candidates = if !bracket_prefixes.is_empty() {
-        bracket_prefixes
+    // Filter prefixes using regex pattern if provided
+    let filtered_prefixes: Vec<&CommonPrefix> = if let Some(regex_pattern) = &options.filter_regex {
+        match Regex::new(regex_pattern) {
+            Ok(regex) => {
+                all_prefixes.iter()
+                    .filter(|prefix| {
+                        // Create the full prefix pattern based on delimiter
+                        let full_prefix = if let Some((open, close)) = &prefix.delimiter {
+                            format!("{}{}{}", open, prefix.prefix, close)
+                        } else {
+                            prefix.prefix.clone()
+                        };
+                        regex.is_match(&full_prefix)
+                    })
+                    .collect()
+            }
+            Err(e) => {
+                eprintln!("Warning: Invalid regex pattern '{}': {}", regex_pattern, e);
+                all_prefixes.iter().collect()
+            }
+        }
     } else {
-        // Fall back to any prefix if no bracket prefixes found
+        all_prefixes.iter().collect()
+    };
+    
+    let candidates = if !filtered_prefixes.is_empty() {
+        filtered_prefixes
+    } else {
+        // Fall back to any prefix if no filtered prefixes found
         all_prefixes.iter().collect()
     };
     

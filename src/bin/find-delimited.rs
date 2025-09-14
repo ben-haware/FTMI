@@ -15,6 +15,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             ],
         },
         min_occurrences: 2,
+        filter_regex: None, // No additional regex filtering
     };
     
     for line in stdin.lock().lines() {

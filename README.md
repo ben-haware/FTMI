@@ -17,9 +17,10 @@ echo "Check the file /home/user/doc.txt and C:\Windows\System32" | ftmi extract-
 ```
 
 ### 🏷️ Prefix Detection
-Find the longest matching prefixes in your directories:
+Find the longest matching prefixes in your directories with configurable regex filtering:
 
-- **Main Mode**: Finds longest bracket-delimited prefixes `[Artist]` with highest occurrence count
+- **Main Mode**: Finds longest prefixes matching regex pattern (default: `\[.*\]` for bracket-delimited)
+- **Configurable filtering**: Use `--regex` to specify custom pattern or `--no-filter` for all prefixes
 - **Returns multiple results** when there are ties (e.g., multiple artists with same number of songs)
 - **Structured output** with `PrefixedPath` containing file paths and prefix information
 
@@ -28,8 +29,15 @@ Additional specialized modes:
 2. **Specific Prefix Mode**: Search for user-specified prefixes  
 3. **Detect All Mode**: Automatically discover all common prefixes
 
-### 🎯 Prefix Removal Preview
-Preview how files would look after prefix removal without actually renaming them.
+### 🎯 Interactive Prefix Removal
+Interactive tool to remove prefixes from files with undo capability:
+
+- **Preview before rename**: See exactly what files will be renamed to
+- **Configurable regex filtering**: Target specific prefix patterns
+- **Interactive confirmation**: Y/n/s (yes/no/skip) with Y as default
+- **Multiple input sources**: Command line args + stdin piping
+- **Relative path support**: Works with `./music`, `../photos`, etc.
+- **Undo capability**: SQLite database tracks renames for rollback (coming soon)
 
 ## Installation
 
@@ -52,7 +60,7 @@ cargo build --release
 
 ## Usage
 
-### Main Binary - Find Longest Bracket Prefixes
+### Main Binary - Find Longest Prefixes
 ```bash
 # Find longest bracket-delimited prefixes in a directory
 echo "/path/to/music" | ftmi
@@ -61,20 +69,39 @@ echo "/path/to/music" | ftmi
 echo -e "/path/to/music\n/path/to/documents" | ftmi
 ```
 
+### Interactive Prefix Removal - Main Tool
+```bash
+# Default: Remove bracket-delimited prefixes interactively
+ftmi rename ./music
+
+# Custom regex: Remove parentheses-delimited prefixes
+ftmi rename --regex '\(.*\)' ./music
+
+# Multiple sources: Command line + piped directories
+echo "./photos" | ftmi rename ./music ./docs
+
+# No filtering: Show all prefixes for selection
+ftmi rename --no-filter ./mixed_files
+```
+
 Example output:
 ```
-Directory: test_data/music/summer_hits
-Prefix: Dua Lipa
-Files (3):
-  [Dua Lipa] Levitating.mp3
-  [Dua Lipa] Don't Start Now.mp3
-  [Dua Lipa] Physical.mp3
+🔧 FTMI Interactive Prefix Removal Tool
+🔍 Using regex filter: \[.*\]
+📊 Processing 1 directories total
 
-Prefix: The Beach Boys
-Files (3):
-  [The Beach Boys] California Girls.mp3
-  [The Beach Boys] Surfin USA.mp3
-  [The Beach Boys] Good Vibrations.mp3
+📁 Directory: ./music
+🏷️  Prefix 1: [Dua Lipa]
+   Files (3):
+   [Dua Lipa] Levitating.mp3 → Levitating.mp3
+   [Dua Lipa] Don't Start Now.mp3 → Don't Start Now.mp3
+   [Dua Lipa] Physical.mp3 → Physical.mp3
+
+💡 Remove prefix [Dua Lipa] from these 3 files? (Y/n/s=skip, default=Y): 
+✅ Proceeding with prefix removal...
+   🔄 Renaming: [Dua Lipa] Levitating.mp3 → Levitating.mp3
+   ✓ Success!
+📊 Results: 3 successful, 0 failed
 ```
 
 ### Find Delimited Prefixes Only
@@ -177,6 +204,21 @@ for result in results {
 }
 ```
 
+**Helper functions for common patterns:**
+```rust
+use ftmi::PrefixOptions;
+
+// Custom regex pattern
+let options = PrefixOptions::with_regex(r"\(.*\)"); // Parentheses-delimited
+
+// No filtering (all prefixes)
+let options = PrefixOptions::no_filter();
+
+// Specific delimiter types
+let options = PrefixOptions::bracket_only(); // [Artist]
+let options = PrefixOptions::paren_only();   // (Draft)
+```
+
 For more control, use the detailed API:
 ```rust
 use ftmi::{find_common_prefix, PrefixOptions, PrefixMode};
@@ -189,6 +231,7 @@ let options = PrefixOptions {
         ],
     },
     min_occurrences: 2,
+    filter_regex: Some(r"\[.*\]".to_string()),
 };
 
 let prefixes = find_common_prefix(Path::new("/music"), &options)?;
@@ -196,7 +239,8 @@ let prefixes = find_common_prefix(Path::new("/music"), &options)?;
 
 ## Project Structure
 
-- `ftmi` - **Main binary (longest bracket prefix mode)**
+- `ftmi` - **Main binary (longest prefix detection)**
+- `ftmi rename` - **Interactive prefix removal tool (main functionality)**
 - `ftmi find-delimited` - Find only delimited prefixes
 - `ftmi find-specific` - Find specific prefixes
 - `ftmi detect-all` - Explicit detect all mode  
@@ -205,8 +249,11 @@ let prefixes = find_common_prefix(Path::new("/music"), &options)?;
 
 **New in latest version:**
 - `PrefixedPath` struct with `Vec<PathBuf>` and `prefix` fields
+- **Configurable regex filtering** for prefix matching (`--regex`, `--no-filter`)
 - Multiple results returned for tied occurrence counts
-- Prioritizes bracket-delimited prefixes `[.*]` matching regex pattern
+- **Interactive rename tool** with preview and confirmation
+- **Multiple input sources** (command line + stdin piping)
+- **Relative path support** for convenience
 
 ## Development
 
