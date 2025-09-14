@@ -458,6 +458,7 @@ mod tests {
                 delimiters: vec![("[".to_string(), "]".to_string())],
             },
             min_occurrences: 2,
+            filter_regex: Some(r"\[.*\]".to_string()),
         };
         let results = find_common_prefix(dir_path, &options)?;
         
@@ -487,6 +488,7 @@ mod tests {
                 prefixes: vec!["IMG_".to_string(), "DOC_".to_string()],
             },
             min_occurrences: 1,
+            filter_regex: None,
         };
         let results = find_common_prefix(dir_path, &options)?;
         
@@ -530,6 +532,7 @@ mod tests {
                 delimiters: vec![("[".to_string(), "]".to_string())],
             },
             min_occurrences: 1,
+            filter_regex: Some(r"\[.*\]".to_string()),
         };
         
         let result = extract_prefix_from_filename("[Artist] Song.mp3", &options);
@@ -546,6 +549,7 @@ mod tests {
                 prefixes: vec!["IMG_".to_string(), "DOC_".to_string()],
             },
             min_occurrences: 1,
+            filter_regex: None,
         };
         
         let result = extract_prefix_from_filename("IMG_001.jpg", &options);

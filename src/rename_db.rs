@@ -137,7 +137,7 @@ impl RenameDatabase {
         let rename_iter = stmt.query_map(params![operation_id], |row| {
             let timestamp_str: String = row.get(1)?;
             let timestamp = DateTime::parse_from_rfc3339(&timestamp_str)
-                .map_err(|e| rusqlite::Error::InvalidColumnType(1, "timestamp".to_string(), rusqlite::types::Type::Text))?
+                .map_err(|_e| rusqlite::Error::InvalidColumnType(1, "timestamp".to_string(), rusqlite::types::Type::Text))?
                 .with_timezone(&Utc);
             
             Ok(RenameRecord {

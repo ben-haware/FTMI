@@ -2,11 +2,17 @@
 downloaded_site/
 
 # Test artifacts and temporary files
-test_rename/
-test_data/
-test_input.txt
+/test_rename/
+/test_data/
+/test_input.txt
 *.tmp
 *.bak
+
+# Root level test files (from test_rename directory)
+"Regular File.txt"
+"Song 1.mp3"
+"Song 2.mp3"
+"[Another Band] Track A.mp3"
 
 # SQLite database files (user data)
 *.db
