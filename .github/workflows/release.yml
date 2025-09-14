@@ -72,10 +72,7 @@ jobs:
       run: cargo build --release --target ${{ matrix.target }}
 
     - name: Upload Release Asset
-      run: |
-        gh release upload ${{ github.ref_name }} \
-          ./target/${{ matrix.target }}/release/${{ matrix.artifact_name }}#${{ matrix.asset_name }} \
-          --clobber
+      run: gh release upload ${{ github.ref_name }} ./target/${{ matrix.target }}/release/${{ matrix.artifact_name }}#${{ matrix.asset_name }} --clobber
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
