@@ -13,7 +13,6 @@ default-run = "ftmi"
 
 [package.metadata.binstall]
 pkg-url = "{ repo }/releases/download/v{ version }/{ name }-{ target }{ binary-ext }"
-bin-dir = "{ bin }{ binary-ext }"
 pkg-fmt = "bin"
 
 [lib]
