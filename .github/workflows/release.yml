@@ -76,7 +76,8 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Generate cargo-binstall metadata
+    - name: Generate cargo-binstall metadata (Unix)
+      if: runner.os != 'Windows'
       run: |
         mkdir -p .cargo
         cat > .cargo/config.toml << EOF
@@ -85,6 +86,17 @@ jobs:
         bin-dir = "{ bin }{ binary-ext }"
         pkg-fmt = "bin"
         EOF
+
+    - name: Generate cargo-binstall metadata (Windows)
+      if: runner.os == 'Windows'
+      run: |
+        New-Item -ItemType Directory -Force -Path .cargo
+        @"
+        [package.metadata.binstall]
+        pkg-url = "{ repo }/releases/download/v{ version }/{ name }-{ target }{ binary-ext }"
+        bin-dir = "{ bin }{ binary-ext }"
+        pkg-fmt = "bin"
+        "@ | Out-File -FilePath .cargo/config.toml -Encoding utf8
 
   publish-crate:
     needs: build
