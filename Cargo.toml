@@ -9,6 +9,7 @@ license-file = "LICENSE"
 readme = "README.md"
 keywords = ["file", "rename", "utility", "cli"]
 categories = ["command-line-utilities"]
+default-run = "ftmi"
 
 [package.metadata.binstall]
 pkg-url = "{ repo }/releases/download/v{ version }/{ name }-{ target }{ binary-ext }"
@@ -24,7 +25,7 @@ name = "ftmi"
 path = "src/main.rs"
 
 [[bin]]
-name = "rename"
+name = "interactive-rename"
 path = "src/bin/rename.rs"
 
 [dependencies]

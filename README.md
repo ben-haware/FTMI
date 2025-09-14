@@ -9,13 +9,13 @@ FTMI is a Rust-based file renaming utility that intelligently detects and remove
 cargo binstall ftmi
 
 # Interactive prefix removal (main functionality)
-rename ./music
+ftmi rename ./music
 
 # Continuous mode for multiple directories
-rename --continuous
+ftmi rename --continuous
 
 # Undo the last operation
-rename --undo
+ftmi rename --undo
 ```
 
 ## ✨ Key Features
@@ -44,7 +44,7 @@ rename --undo
 
 ### Basic Interactive Renaming
 ```bash
-rename ./music
+ftmi rename ./music
 ```
 ```
 🔧 FTMI Interactive Prefix Removal Tool
@@ -67,7 +67,7 @@ Found 1 prefix group(s) with highest occurrence count:
 
 ### Continuous Mode (Perfect for Multiple Directories)
 ```bash
-rename --continuous
+ftmi rename --continuous
 ```
 ```
 🔄 Continuous mode started. Paste directory paths and press Enter.
@@ -87,7 +87,7 @@ rename --continuous
 ### Undo Operations
 ```bash
 # Undo the most recent operation
-rename --undo
+ftmi rename --undo
 ```
 ```
 🔄 Finding most recent operation to undo...
@@ -111,7 +111,7 @@ rename --undo
 
 ### Operation History
 ```bash
-rename --list
+ftmi rename --list
 ```
 ```
 📋 Recent rename operations:
@@ -130,13 +130,13 @@ rename --list
 ### Custom Patterns
 ```bash
 # Remove parentheses-delimited prefixes
-rename --regex '\(.*\)' ./documents
+ftmi rename --regex '\(.*\)' ./documents
 
 # Remove any prefixes (no filtering)
-rename --no-filter ./mixed_files
+ftmi rename --no-filter ./mixed_files
 
 # Process multiple directories
-rename ./music ./photos ./documents
+ftmi rename ./music ./photos ./documents
 ```
 
 ## 🛠 Installation
@@ -160,9 +160,9 @@ cargo build --release
 
 ## 📋 Command Reference
 
-### Main Tool: `rename`
+### Main Tool: `ftmi rename`
 ```bash
-rename [OPTIONS] [DIRECTORIES...]
+ftmi rename [OPTIONS] [DIRECTORIES...]
 
 OPTIONS:
     -r, --regex PATTERN    Use custom regex to filter prefixes (default: \[.*\])
@@ -173,11 +173,11 @@ OPTIONS:
     -h, --help            Show help message
 
 EXAMPLES:
-    rename ./music                    # Interactive rename with preview
-    rename --continuous               # Continuous mode for multiple dirs
-    rename --undo                     # Undo most recent operation
-    rename --list                     # Show operation history
-    rename --regex '\(.*\)' ./docs    # Custom pattern matching
+    ftmi rename ./music                    # Interactive rename with preview
+    ftmi rename --continuous               # Continuous mode for multiple dirs
+    ftmi rename --undo                     # Undo most recent operation
+    ftmi rename --list                     # Show operation history
+    ftmi rename --regex '\(.*\)' ./docs    # Custom pattern matching
 ```
 
 ### Analysis Tools
@@ -191,31 +191,31 @@ echo "./music" | ftmi    # Pipe directory paths for analysis
 ### Multiple Input Sources
 ```bash
 # Command line + piped input
-echo "./photos" | rename ./music ./documents
+echo "./photos" | ftmi rename ./music ./documents
 ```
 
 ### Pattern Matching Examples
 ```bash
 # Bracket prefixes: [Artist] Song.mp3
-rename ./music
+ftmi rename ./music
 
 # Parentheses prefixes: (Draft) Document.pdf  
-rename --regex '\(.*\)' ./documents
+ftmi rename --regex '\(.*\)' ./documents
 
 # Image prefixes: IMG_001.jpg, DSC_002.jpg
-rename --regex 'IMG_.*|DSC_.*' ./photos
+ftmi rename --regex 'IMG_.*|DSC_.*' ./photos
 
 # No filtering (show all prefixes)
-rename --no-filter ./mixed_files
+ftmi rename --no-filter ./mixed_files
 ```
 
 ### Workflow Integration
 ```bash
 # Process multiple music directories in sequence
-find ~/Music -maxdepth 1 -type d | rename --continuous
+find ~/Music -maxdepth 1 -type d | ftmi rename --continuous
 
 # Quick undo if something goes wrong
-rename --undo
+ftmi rename --undo
 ```
 
 ## 🏗 Library Usage
@@ -238,9 +238,10 @@ tracked_rename(&db, &old_path, &new_path, &prefix, &operation_id)?;
 
 ## 📂 Project Structure
 
-**Main Binaries:**
-- `rename` - **Interactive prefix removal tool (primary)**
-- `ftmi` - Prefix analysis and detection
+**Main Tool:**
+- `ftmi` - **Main CLI with subcommands**
+  - `ftmi rename` - **Interactive prefix removal tool (primary)**
+  - `ftmi` (default) - Prefix analysis and detection
 
 **Database:**
 - SQLite database in `~/.ftmi/renames.db`

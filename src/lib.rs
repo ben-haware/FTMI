@@ -14,6 +14,30 @@ pub use rename_db::{
     RenameDatabase, RenameRecord, generate_operation_id, tracked_rename
 };
 
+/// Main function for the rename subcommand
+pub fn rename_main(args: Vec<String>) -> Result<(), Box<dyn std::error::Error>> {
+    // This is a bit of a hack - we'll include the rename binary code here
+    // or call it as a separate process
+    use std::process::Command;
+    
+    // Execute the interactive-rename binary with the provided args
+    let mut cmd = Command::new("cargo");
+    cmd.arg("run").arg("--bin").arg("interactive-rename").arg("--");
+    
+    // Add all arguments except the first one (program name)
+    for arg in args.iter().skip(1) {
+        cmd.arg(arg);
+    }
+    
+    let status = cmd.status()?;
+    
+    if !status.success() {
+        std::process::exit(status.code().unwrap_or(1));
+    }
+    
+    Ok(())
+}
+
 /// Main application logic for processing directories from stdin
 pub fn process_directories_from_stdin() -> Result<(), Box<dyn std::error::Error>> {
     let stdin = io::stdin();
