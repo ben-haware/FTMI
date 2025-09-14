@@ -1,4 +1,4 @@
-.PHONY: help install install-cargo install-binstall build test clean release tag-release patch
+.PHONY: help install install-cargo install-binstall build test clean release tag-release patch actions status
 
 # Default target
 help:
@@ -12,6 +12,8 @@ help:
 	@echo "  release       - Build in release mode"
 	@echo "  tag-release   - Create and push git tag (VERSION=x.y.z or auto-increment minor)"
 	@echo "  patch         - Increment patch version and create tag"
+	@echo "  actions       - Open currently running GitHub Action for latest tag"
+	@echo "  status        - Show success/failure status of latest tag release (CLI only)"
 
 # Full installation
 install: install-cargo install-binstall
@@ -82,6 +84,76 @@ patch:
 	PATCH=$$(echo $$LAST_VERSION | cut -d. -f3); \
 	NEW_PATCH=$$(($$PATCH + 1)); \
 	NEW_VERSION="$$MAJOR.$$MINOR.$$NEW_PATCH"; \
+	while git tag -l | grep -q "^v$$NEW_VERSION$$"; do \
+		NEW_PATCH=$$(($$NEW_PATCH + 1)); \
+		NEW_VERSION="$$MAJOR.$$MINOR.$$NEW_PATCH"; \
+	done; \
+	echo "Updating Cargo.toml to version $$NEW_VERSION"; \
+	sed -i '' "s/^version = .*/version = \"$$NEW_VERSION\"/" Cargo.toml; \
+	git add Cargo.toml; \
+	git commit -m "Bump version to $$NEW_VERSION"; \
 	echo "Creating release v$$NEW_VERSION"; \
 	git tag v$$NEW_VERSION; \
+	git push origin main; \
 	git push origin v$$NEW_VERSION
+
+# Open currently running GitHub Action for the latest tag
+actions:
+	@echo "Finding currently running action for latest tag..."
+	@REPO_URL=$$(git remote get-url origin 2>/dev/null || echo ""); \
+	if [ -z "$$REPO_URL" ]; then \
+		echo "Error: No git remote origin found"; \
+		exit 1; \
+	fi; \
+	LATEST_TAG=$$(git describe --tags --abbrev=0 2>/dev/null || echo ""); \
+	if [ -z "$$LATEST_TAG" ]; then \
+		echo "Error: No tags found in repository"; \
+		exit 1; \
+	fi; \
+	echo "Latest tag: $$LATEST_TAG"; \
+	GITHUB_URL=$$(echo $$REPO_URL | sed 's/\.git$$//' | sed 's/^git@github\.com:/https:\/\/github.com\//'); \
+	REPO_PATH=$$(echo $$GITHUB_URL | sed 's|https://github.com/||'); \
+	echo "Checking for running actions on tag $$LATEST_TAG..."; \
+	RUN_ID=$$(gh api repos/$$REPO_PATH/actions/runs --jq ".workflow_runs[] | select(.head_branch == \"$$LATEST_TAG\" and (.status == \"in_progress\" or .status == \"queued\")) | .id" | head -n1); \
+	if [ -n "$$RUN_ID" ]; then \
+		ACTIONS_URL="$$GITHUB_URL/actions/runs/$$RUN_ID"; \
+		echo "Opening currently running action: $$ACTIONS_URL"; \
+		open "$$ACTIONS_URL"; \
+	else \
+		echo "No currently running actions found for tag $$LATEST_TAG"; \
+		ACTIONS_URL="$$GITHUB_URL/actions?query=event%3Apush+branch%3A$$LATEST_TAG"; \
+		echo "Opening actions page filtered by tag: $$ACTIONS_URL"; \
+		open "$$ACTIONS_URL"; \
+	fi
+
+# Show CLI-only status of latest tag release
+status:
+	@echo "Checking release status for latest tag..."
+	@REPO_URL=$$(git remote get-url origin 2>/dev/null || echo ""); \
+	if [ -z "$$REPO_URL" ]; then \
+		echo "❌ Error: No git remote origin found"; \
+		exit 1; \
+	fi; \
+	LATEST_TAG=$$(git describe --tags --abbrev=0 2>/dev/null || echo ""); \
+	if [ -z "$$LATEST_TAG" ]; then \
+		echo "❌ Error: No tags found in repository"; \
+		exit 1; \
+	fi; \
+	echo "📋 Latest tag: $$LATEST_TAG"; \
+	GITHUB_URL=$$(echo $$REPO_URL | sed 's/\.git$$//' | sed 's/^git@github\.com:/https:\/\/github.com\//'); \
+	REPO_PATH=$$(echo $$GITHUB_URL | sed 's|https://github.com/||'); \
+	echo "🔍 Fetching workflow status..."; \
+	RUNS_JSON=$$(gh api repos/$$REPO_PATH/actions/runs --jq ".workflow_runs[] | select(.head_branch == \"$$LATEST_TAG\") | {id, status, conclusion, workflow_name: .name, html_url, created_at}" | jq -s 'sort_by(.created_at) | reverse'); \
+	if [ "$$RUNS_JSON" = "[]" ] || [ -z "$$RUNS_JSON" ]; then \
+		echo "⚠️  No workflow runs found for tag $$LATEST_TAG"; \
+		exit 0; \
+	fi; \
+	echo "$$RUNS_JSON" | jq -r '.[] | "🔧 \(.workflow_name):\n   Status: \(.status)\n   Result: \(.conclusion // "pending")\n   URL: \(.html_url)\n"'; \
+	OVERALL_STATUS=$$(echo "$$RUNS_JSON" | jq -r 'map(select(.status == "completed")) | if length == 0 then "running" elif all(.conclusion == "success") then "success" elif any(.conclusion == "failure") then "failure" else "mixed" end'); \
+	case $$OVERALL_STATUS in \
+		success) echo "✅ Overall Status: SUCCESS - All workflows completed successfully" ;; \
+		failure) echo "❌ Overall Status: FAILURE - One or more workflows failed" ;; \
+		mixed) echo "⚠️  Overall Status: MIXED - Some workflows succeeded, others failed" ;; \
+		running) echo "🔄 Overall Status: RUNNING - Workflows still in progress" ;; \
+		*) echo "❓ Overall Status: UNKNOWN" ;; \
+	esac
