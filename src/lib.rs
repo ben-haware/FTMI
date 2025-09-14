@@ -1,5 +1,6 @@
 pub mod path_extraction;
 pub mod prefix_finder;
+pub mod rename_db;
 
 use std::io::{self, BufRead};
 use std::path::Path;
@@ -8,6 +9,9 @@ pub use path_extraction::{extract_paths_from_text, deduplicate_paths};
 pub use prefix_finder::{
     find_common_prefix, find_longest_prefix, PrefixOptions, CommonPrefix, PrefixedPath, PrefixMode,
     extract_prefix_from_filename, remove_prefix, remove_prefix_with_delimiter
+};
+pub use rename_db::{
+    RenameDatabase, RenameRecord, generate_operation_id, tracked_rename
 };
 
 /// Main application logic for processing directories from stdin

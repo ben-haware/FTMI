@@ -1,47 +1,147 @@
 # FTMI - File Tools for Mass Interaction
 
-FTMI is a Rust-based file manipulation utility focused on detecting and managing file prefixes. It provides powerful tools for analyzing file naming patterns and preparing bulk rename operations.
+FTMI is a Rust-based file renaming utility that intelligently detects and removes file prefixes. Built for efficiency with SQLite-powered undo capabilities and interactive workflows.
 
-## Quick Install
+## 🚀 Quick Start
 
 ```bash
-git clone https://github.com/ben-haware/FTMI && cd FTMI && make install
+# Install via cargo-binstall (fastest)
+cargo binstall ftmi
+
+# Interactive prefix removal (main functionality)
+rename ./music
+
+# Continuous mode for multiple directories
+rename --continuous
+
+# Undo the last operation
+rename --undo
 ```
 
-## Features
+## ✨ Key Features
 
-### 🔍 Path Extraction
-Extract file paths from any text input:
+### 🎯 **Smart Interactive Renaming**
+- **Preview before rename**: See exactly what files will be renamed
+- **Multiple prefixes**: Handles ties (e.g., multiple artists with same song count)
+- **Regex filtering**: Target specific patterns like `[Artist]`, `(Draft)`, `IMG_*`
+- **Continuous mode**: Paste multiple directory paths for batch processing
+- **200ms debounce**: Prevents screen tearing during rapid input
+
+### 🔄 **Complete Undo System**
+- **SQLite database**: Tracks every rename operation with timestamps
+- **One-click undo**: `rename --undo` restores the most recent operation
+- **Operation history**: `rename --list` shows all recent operations
+- **Selective undo**: `rename --undo <operation_id>` for specific operations
+- **Preview before undo**: See exactly what will be restored
+
+### 🔍 **Advanced Prefix Detection**
+- **Bracket-delimited**: `[Artist] Song.mp3` → `Song.mp3`
+- **Parentheses**: `(Draft) Document.pdf` → `Document.pdf`
+- **Custom patterns**: Use `--regex` for any pattern
+- **Multiple results**: Returns all prefixes with highest occurrence count
+
+## 📖 Usage Examples
+
+### Basic Interactive Renaming
 ```bash
-echo "Check the file /home/user/doc.txt and C:\Windows\System32" | ftmi extract-paths
+rename ./music
+```
+```
+🔧 FTMI Interactive Prefix Removal Tool
+📁 Directory: ./music
+Found 1 prefix group(s) with highest occurrence count:
+
+🏷️  Prefix 1: [Dua Lipa]
+   Files (3):
+   [Dua Lipa] Levitating.mp3 → Levitating.mp3
+   [Dua Lipa] Don't Start Now.mp3 → Don't Start Now.mp3
+   [Dua Lipa] Physical.mp3 → Physical.mp3
+
+💡 Remove prefix [Dua Lipa] from these 3 files? (Y/n/s=skip, default=Y): y
+✅ Proceeding with prefix removal...
+   🔄 Renaming: [Dua Lipa] Levitating.mp3 → Levitating.mp3
+   ✓ Success!
+📊 Results: 3 successful, 0 failed
+💾 Operation ID: op_1757889353 (use this to undo if needed)
 ```
 
-### 🏷️ Prefix Detection
-Find the longest matching prefixes in your directories with configurable regex filtering:
+### Continuous Mode (Perfect for Multiple Directories)
+```bash
+rename --continuous
+```
+```
+🔄 Continuous mode started. Paste directory paths and press Enter.
+💡 Each path will be processed immediately after a brief delay.
+   Press Ctrl+C to exit.
 
-- **Main Mode**: Finds longest prefixes matching regex pattern (default: `\[.*\]` for bracket-delimited)
-- **Configurable filtering**: Use `--regex` to specify custom pattern or `--no-filter` for all prefixes
-- **Returns multiple results** when there are ties (e.g., multiple artists with same number of songs)
-- **Structured output** with `PrefixedPath` containing file paths and prefix information
+# Paste: /Users/me/Music/Rock /Users/me/Music/Pop /Users/me/Music/Jazz
+📂 Processing 3 directories (pasted together):
+   1: /Users/me/Music/Rock
+   2: /Users/me/Music/Pop
+   3: /Users/me/Music/Jazz
 
-Additional specialized modes:
-1. **Delimiter-Only Mode**: Find prefixes within delimiters like `[Artist]`, `(Draft)`, `{ID}`
-2. **Specific Prefix Mode**: Search for user-specified prefixes  
-3. **Detect All Mode**: Automatically discover all common prefixes
+🔍 Processing directory 1 of 3: /Users/me/Music/Rock
+[Interactive processing for each directory...]
+```
 
-### 🎯 Interactive Prefix Removal
-Interactive tool to remove prefixes from files with undo capability:
+### Undo Operations
+```bash
+# Undo the most recent operation
+rename --undo
+```
+```
+🔄 Finding most recent operation to undo...
+🎯 Most recent operation: op_1757889353
+🔄 Undoing operation: op_1757889353
+📂 Directory: /Users/me/music
+🏷️  Prefix: [Dua Lipa]
+📅 Original timestamp: 2025-09-14 22:35:53 UTC
+📊 Files to restore: 3
 
-- **Preview before rename**: See exactly what files will be renamed to
-- **Configurable regex filtering**: Target specific prefix patterns
-- **Interactive confirmation**: Y/n/s (yes/no/skip) with Y as default
-- **Multiple input sources**: Command line args + stdin piping
-- **Relative path support**: Works with `./music`, `../photos`, etc.
-- **Undo capability**: SQLite database tracks renames for rollback (coming soon)
+🔄 Preview of restore operation:
+   Levitating.mp3 → [Dua Lipa] Levitating.mp3
+   Don't Start Now.mp3 → [Dua Lipa] Don't Start Now.mp3
+   Physical.mp3 → [Dua Lipa] Physical.mp3
 
-## Installation
+💡 Are you sure you want to undo this operation? (y/N): y
+✅ Proceeding with undo...
+📊 Undo results: 3 successful, 0 failed
+✅ Operation successfully undone!
+```
 
-### Using cargo-binstall (fastest)
+### Operation History
+```bash
+rename --list
+```
+```
+📋 Recent rename operations:
+1. Operation ID: op_1757889353
+   Timestamp: 2025-09-14 22:35:53 UTC
+   Directory: /Users/me/music
+   Prefix removed: [Dua Lipa]
+   Files renamed: 3
+     [Dua Lipa] Levitating.mp3 → Levitating.mp3
+     [Dua Lipa] Don't Start Now.mp3 → Don't Start Now.mp3
+     [Dua Lipa] Physical.mp3 → Physical.mp3
+
+💡 Use 'rename --undo <operation_id>' to undo any operation.
+```
+
+### Custom Patterns
+```bash
+# Remove parentheses-delimited prefixes
+rename --regex '\(.*\)' ./documents
+
+# Remove any prefixes (no filtering)
+rename --no-filter ./mixed_files
+
+# Process multiple directories
+rename ./music ./photos ./documents
+```
+
+## 🛠 Installation
+
+### Using cargo-binstall (recommended)
 ```bash
 cargo binstall ftmi
 ```
@@ -58,230 +158,110 @@ cd FTMI
 cargo build --release
 ```
 
-## Usage
+## 📋 Command Reference
 
-### Main Binary - Find Longest Prefixes
+### Main Tool: `rename`
 ```bash
-# Find longest bracket-delimited prefixes in a directory
-echo "/path/to/music" | ftmi
+rename [OPTIONS] [DIRECTORIES...]
 
-# Analyze multiple directories
-echo -e "/path/to/music\n/path/to/documents" | ftmi
+OPTIONS:
+    -r, --regex PATTERN    Use custom regex to filter prefixes (default: \[.*\])
+    --no-filter           Accept all prefixes (no regex filtering)
+    -c, --continuous      Continuous mode: listen for pasted paths
+    -u, --undo [ID]       Undo an operation (most recent if no ID given)
+    -l, --list            List recent rename operations
+    -h, --help            Show help message
+
+EXAMPLES:
+    rename ./music                    # Interactive rename with preview
+    rename --continuous               # Continuous mode for multiple dirs
+    rename --undo                     # Undo most recent operation
+    rename --list                     # Show operation history
+    rename --regex '\(.*\)' ./docs    # Custom pattern matching
 ```
 
-### Interactive Prefix Removal - Main Tool
+### Analysis Tools
 ```bash
-# Default: Remove bracket-delimited prefixes interactively
-ftmi rename ./music
-
-# Custom regex: Remove parentheses-delimited prefixes
-ftmi rename --regex '\(.*\)' ./music
-
-# Multiple sources: Command line + piped directories
-echo "./photos" | ftmi rename ./music ./docs
-
-# No filtering: Show all prefixes for selection
-ftmi rename --no-filter ./mixed_files
+ftmi                     # Find longest prefixes (analysis only)
+echo "./music" | ftmi    # Pipe directory paths for analysis
 ```
 
-Example output:
-```
-🔧 FTMI Interactive Prefix Removal Tool
-🔍 Using regex filter: \[.*\]
-📊 Processing 1 directories total
+## 🔧 Advanced Usage
 
-📁 Directory: ./music
-🏷️  Prefix 1: [Dua Lipa]
-   Files (3):
-   [Dua Lipa] Levitating.mp3 → Levitating.mp3
-   [Dua Lipa] Don't Start Now.mp3 → Don't Start Now.mp3
-   [Dua Lipa] Physical.mp3 → Physical.mp3
-
-💡 Remove prefix [Dua Lipa] from these 3 files? (Y/n/s=skip, default=Y): 
-✅ Proceeding with prefix removal...
-   🔄 Renaming: [Dua Lipa] Levitating.mp3 → Levitating.mp3
-   ✓ Success!
-📊 Results: 3 successful, 0 failed
-```
-
-### Find Delimited Prefixes Only
-Perfect for organized media files:
+### Multiple Input Sources
 ```bash
-echo "/path/to/music" | ftmi find-delimited
+# Command line + piped input
+echo "./photos" | rename ./music ./documents
 ```
 
-Example output:
-```
-Directory: /path/to/music
---------------------------------------------------
-Prefix: The Beatles (within []) - 5 files
-  - [The Beatles] Hey Jude.mp3
-  - [The Beatles] Let It Be.mp3
-  - [The Beatles] Yesterday.mp3
-  ...
-```
-
-### Find Specific Prefixes
-Search for known prefix patterns:
+### Pattern Matching Examples
 ```bash
-echo "/path/to/photos" | ftmi find-specific IMG_ DSC_ 
+# Bracket prefixes: [Artist] Song.mp3
+rename ./music
+
+# Parentheses prefixes: (Draft) Document.pdf  
+rename --regex '\(.*\)' ./documents
+
+# Image prefixes: IMG_001.jpg, DSC_002.jpg
+rename --regex 'IMG_.*|DSC_.*' ./photos
+
+# No filtering (show all prefixes)
+rename --no-filter ./mixed_files
 ```
 
-### Extract Paths from Text
+### Workflow Integration
 ```bash
-cat logfile.txt | ftmi extract-paths
+# Process multiple music directories in sequence
+find ~/Music -maxdepth 1 -type d | rename --continuous
+
+# Quick undo if something goes wrong
+rename --undo
 ```
 
-### Preview Prefix Removal
-See what files would be renamed:
-```bash
-# Auto-detect prefixes and show removal preview
-ftmi remove-prefix auto /path/to/files
+## 🏗 Library Usage
 
-# Interactive mode
-ftmi remove-prefix prefix /path/to/files
-```
-
-## Examples
-
-### Music Library Organization
-```bash
-$ echo "test_data/music/indie_collection" | ftmi
-
-Directory: test_data/music/indie_collection
-Prefix: Arctic Monkeys
-Files (3):
-  [Arctic Monkeys] 505.mp3
-  [Arctic Monkeys] R U Mine.mp3
-  [Arctic Monkeys] Do I Wanna Know.mp3
-
-Prefix: Tame Impala
-Files (3):
-  [Tame Impala] The Less I Know The Better.mp3
-  [Tame Impala] Elephant.mp3
-  [Tame Impala] Feels Like We Only Go Backwards.mp3
-```
-
-### Photo Collection Analysis
-```bash
-$ echo "/photos/vacation" | ftmi find-specific IMG_ DSC_
-
-Directory: /photos/vacation
---------------------------------------------------
-Prefix: IMG_ - 45 files
-  - IMG_2024_001.jpg
-  - IMG_2024_002.jpg
-  ...
-
-Prefix: DSC_ - 12 files
-  - DSC_0001.jpg
-  - DSC_0002.jpg
-  ...
-```
-
-### Path Extraction from Logs
-```bash
-$ tail -n 100 app.log | ftmi extract-paths
-/var/log/app/error.log
-/home/user/config/settings.json
-C:\Program Files\App\config.ini
-```
-
-## Library Usage
-
-FTMI can also be used as a library in your Rust projects:
+Use FTMI as a library in your Rust projects:
 
 ```rust
-use ftmi::{find_longest_prefix, PrefixOptions, PrefixedPath};
-use std::path::Path;
+use ftmi::{find_longest_prefix, PrefixOptions, PrefixedPath, RenameDatabase, tracked_rename};
 
+// Find prefixes
 let options = PrefixOptions::default();
 let results: Vec<PrefixedPath> = find_longest_prefix(Path::new("/music"), &options)?;
 
-for result in results {
-    println!("Prefix: {}", result.prefix);
-    println!("Files: {:?}", result.paths);
-}
+// Track renames with database
+let db = RenameDatabase::new(db_path);
+db.initialize()?;
+let operation_id = generate_operation_id();
+tracked_rename(&db, &old_path, &new_path, &prefix, &operation_id)?;
 ```
 
-**Helper functions for common patterns:**
-```rust
-use ftmi::PrefixOptions;
+## 📂 Project Structure
 
-// Custom regex pattern
-let options = PrefixOptions::with_regex(r"\(.*\)"); // Parentheses-delimited
+**Main Binaries:**
+- `rename` - **Interactive prefix removal tool (primary)**
+- `ftmi` - Prefix analysis and detection
 
-// No filtering (all prefixes)
-let options = PrefixOptions::no_filter();
+**Database:**
+- SQLite database in `~/.ftmi/renames.db`
+- Automatic cleanup of old operations
+- Cross-platform compatibility
 
-// Specific delimiter types
-let options = PrefixOptions::bracket_only(); // [Artist]
-let options = PrefixOptions::paren_only();   // (Draft)
-```
+## 🤝 Contributing
 
-For more control, use the detailed API:
-```rust
-use ftmi::{find_common_prefix, PrefixOptions, PrefixMode};
+Contributions welcome! Please submit pull requests or open issues.
 
-let options = PrefixOptions {
-    mode: PrefixMode::DelimiterOnly {
-        delimiters: vec![
-            ("[".to_string(), "]".to_string()),
-            ("(".to_string(), ")".to_string()),
-        ],
-    },
-    min_occurrences: 2,
-    filter_regex: Some(r"\[.*\]".to_string()),
-};
+## 📄 License
 
-let prefixes = find_common_prefix(Path::new("/music"), &options)?;
-```
+Free for individual use. Commercial license required for corporations.
+See [LICENSE](LICENSE) for details.
 
-## Project Structure
+## 🛣 Recent Updates
 
-- `ftmi` - **Main binary (longest prefix detection)**
-- `ftmi rename` - **Interactive prefix removal tool (main functionality)**
-- `ftmi find-delimited` - Find only delimited prefixes
-- `ftmi find-specific` - Find specific prefixes
-- `ftmi detect-all` - Explicit detect all mode  
-- `ftmi extract-paths` - Extract paths from text
-- `ftmi remove-prefix` - Preview prefix removal
-
-**New in latest version:**
-- `PrefixedPath` struct with `Vec<PathBuf>` and `prefix` fields
-- **Configurable regex filtering** for prefix matching (`--regex`, `--no-filter`)
-- Multiple results returned for tied occurrence counts
-- **Interactive rename tool** with preview and confirmation
-- **Multiple input sources** (command line + stdin piping)
-- **Relative path support** for convenience
-
-## Development
-
-### Running Tests
-```bash
-cargo test
-```
-
-### Building All Binaries
-```bash
-cargo build --release --bins
-```
-
-## License
-
-This project is free for individual use. Corporations require a commercial license.
-
-See the [LICENSE](LICENSE) file for details.
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## Roadmap
-
-- [ ] Actual file renaming functionality (currently preview only)
-- [ ] Recursive directory scanning
-- [ ] Custom delimiter configuration
-- [ ] Undo/redo functionality
-- [ ] Dry-run mode with detailed reports
-- [ ] Pattern-based renaming rules
+- ✅ **Full undo system** with SQLite tracking
+- ✅ **Continuous mode** for batch processing  
+- ✅ **Preview before rename** and undo
+- ✅ **Operation history** and selective undo
+- ✅ **200ms debounce** for smooth UX
+- ✅ **Multiple prefix handling** for tied results
+- ✅ **Configurable regex filtering**
