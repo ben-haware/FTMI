@@ -5,8 +5,8 @@ FTMI is a Rust-based file renaming utility that intelligently detects and remove
 ## 🚀 Quick Start
 
 ```bash
-# Install via cargo-binstall (fastest)
-cargo binstall ftmi
+# Quick install (handles all dependencies)
+git clone https://github.com/ben-haware/FTMI && cd FTMI && make install
 
 # Interactive prefix removal (main functionality)
 ftmi rename ./music
@@ -141,17 +141,25 @@ ftmi rename ./music ./photos ./documents
 
 ## 🛠 Installation
 
-### Using cargo-binstall (recommended)
+### Quick Install (Recommended)
+```bash
+git clone https://github.com/ben-haware/FTMI && cd FTMI && make install
+```
+*This automatically installs Rust, cargo-binstall, and FTMI*
+
+### Alternative Methods
+
+**Using cargo-binstall (fastest if you have Rust):**
 ```bash
 cargo binstall ftmi
 ```
 
-### From source
+**From source:**
 ```bash
 cargo install ftmi
 ```
 
-### From repository
+**Manual build:**
 ```bash
 git clone https://github.com/ben-haware/FTMI
 cd FTMI
