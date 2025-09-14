@@ -1,4 +1,4 @@
-.PHONY: help install install-cargo install-binstall build test clean release tag-release patch actions status
+.PHONY: help install install-cargo install-binstall build test clean release tag-release patch actions status ensure-build
 
 # Default target
 help:
@@ -14,6 +14,7 @@ help:
 	@echo "  patch         - Increment patch version and create tag"
 	@echo "  actions       - Open currently running GitHub Action for latest tag"
 	@echo "  status        - Show success/failure status of latest tag release (CLI only)"
+	@echo "  ensure-build  - Build project and stage Cargo.lock for commit"
 
 # Full installation
 install: install-cargo install-binstall
@@ -74,7 +75,19 @@ tag-release:
 		git push origin v$$NEW_VERSION; \
 	fi
 
-patch:
+# Ensure project builds and Cargo.lock is up to date
+ensure-build:
+	@echo "Building project to ensure it compiles..."
+	cargo build
+	@echo "Staging Cargo.lock if it was updated..."
+	@if git diff --name-only Cargo.lock | grep -q Cargo.lock; then \
+		echo "Cargo.lock was updated, staging for commit"; \
+		git add Cargo.lock; \
+	else \
+		echo "Cargo.lock unchanged"; \
+	fi
+
+patch: ensure-build
 	@echo "Auto-incrementing patch version..."
 	@LAST_TAG=$$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0"); \
 	echo "Last tag: $$LAST_TAG"; \
@@ -90,7 +103,8 @@ patch:
 	done; \
 	echo "Updating Cargo.toml to version $$NEW_VERSION"; \
 	sed -i '' "s/^version = .*/version = \"$$NEW_VERSION\"/" Cargo.toml; \
-	git add Cargo.toml; \
+	cargo build; \
+	git add Cargo.toml Cargo.lock; \
 	git commit -m "Bump version to $$NEW_VERSION"; \
 	echo "Creating release v$$NEW_VERSION"; \
 	git tag v$$NEW_VERSION; \
