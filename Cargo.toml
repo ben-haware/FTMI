@@ -23,10 +23,6 @@ path = "src/lib.rs"
 name = "ftmi"
 path = "src/main.rs"
 
-[[bin]]
-name = "interactive-rename"
-path = "src/bin/rename.rs"
-
 [dependencies]
 regex = "1.10"
 atty = "0.2"

@@ -1,6 +1,7 @@
 pub mod path_extraction;
 pub mod prefix_finder;
 pub mod rename_db;
+pub mod subcommands;
 
 use std::io::{self, BufRead};
 use std::path::Path;

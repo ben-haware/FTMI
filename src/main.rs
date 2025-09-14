@@ -15,25 +15,24 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 // Import and call the rename main function
                 return ftmi::rename_main(rename_args);
             }
+            "analyze" => {
+                // Execute the analysis functionality
+                return process_directories_longest_prefix();
+            }
             "extract-paths" => {
-                println!("extract-paths functionality - use separate binary for now");
-                return Ok(());
+                return ftmi::subcommands::extract_paths_command(args);
             }
             "find-delimited" => {
-                println!("find-delimited functionality - use separate binary for now");
-                return Ok(());
+                return ftmi::subcommands::find_delimited_command(args);
             }
             "find-specific" => {
-                println!("find-specific functionality - use separate binary for now");
-                return Ok(());
+                return ftmi::subcommands::find_specific_command(args);
             }
             "detect-all" => {
-                println!("detect-all functionality - use separate binary for now");
-                return Ok(());
+                return ftmi::subcommands::detect_all_command(args);
             }
             "remove-prefix" => {
-                println!("remove-prefix functionality - use separate binary for now");
-                return Ok(());
+                return ftmi::subcommands::remove_prefix_command(args);
             }
             "--help" | "-h" => {
                 print_help();
@@ -47,8 +46,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
     
-    // Default behavior: longest prefix detection
-    process_directories_longest_prefix()
+    // Default behavior: show help
+    print_help();
+    Ok(())
 }
 
 fn print_help() {
@@ -60,6 +60,7 @@ fn print_help() {
     println!();
     println!("SUBCOMMANDS:");
     println!("    rename              Interactive prefix removal tool (main functionality)");
+    println!("    analyze             Analyze directories for longest prefix detection");
     println!("    extract-paths       Extract file paths from text input");
     println!("    find-delimited      Find delimited prefixes like [Artist], (Draft)");
     println!("    find-specific       Search for specific prefix patterns");
@@ -67,7 +68,7 @@ fn print_help() {
     println!("    remove-prefix       Preview prefix removal operations");
     println!();
     println!("DEFAULT (no subcommand):");
-    println!("    Analyzes directories for longest prefix detection");
+    println!("    Shows this help message");
     println!();
     println!("EXAMPLES:");
     println!("    # Main interactive renaming tool");
@@ -75,9 +76,9 @@ fn print_help() {
     println!("    ftmi rename --continuous");
     println!("    ftmi rename --undo");
     println!();
-    println!("    # Analysis (default behavior)");
-    println!("    ftmi");
-    println!("    echo './music' | ftmi");
+    println!("    # Analysis");
+    println!("    ftmi analyze");
+    println!("    echo './music' | ftmi analyze");
     println!();
     println!("    # Other tools");
     println!("    ftmi extract-paths < logfile.txt");
