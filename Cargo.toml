@@ -15,5 +15,16 @@ pkg-url = "{ repo }/releases/download/v{ version }/{ name }-{ target }{ binary-e
 bin-dir = "{ bin }{ binary-ext }"
 pkg-fmt = "bin"
 
+[lib]
+name = "ftmi"
+path = "src/lib.rs"
+
+[[bin]]
+name = "ftmi"
+path = "src/main.rs"
+
 [dependencies]
 regex = "1.10"
+
+[dev-dependencies]
+tempfile = "3.8"

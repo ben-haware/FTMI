@@ -35,7 +35,7 @@ fn test_windows_paths() {
 fn test_relative_paths() {
     let input = "Run ./scripts/build.sh and check ../config/settings.json";
     let output = run_ftmi(input);
-    let lines: Vec<&str> = output.trim().split('\n').collect();
+    let lines: Vec<&str> = output.trim().split('\n').filter(|s| !s.is_empty()).collect();
     assert_eq!(lines.len(), 2);
     assert!(lines.contains(&"../config/settings.json"));
     assert!(lines.contains(&"./scripts/build.sh"));
@@ -90,19 +90,29 @@ fn test_no_paths() {
 
 // Helper function to run ftmi with input
 fn run_ftmi(input: &str) -> String {
-    let mut child = Command::new("cargo")
-        .args(&["run", "--quiet", "--"])
+    // Use the compiled binary directly instead of cargo run
+    let binary_path = env!("CARGO_BIN_EXE_extract-paths");
+    
+    let mut child = Command::new(binary_path)
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
         .spawn()
-        .expect("Failed to start ftmi");
+        .expect("Failed to start extract-paths");
 
-    {
-        let stdin = child.stdin.as_mut().expect("Failed to get stdin");
+    // Write input and explicitly close stdin
+    if let Some(mut stdin) = child.stdin.take() {
         stdin.write_all(input.as_bytes()).expect("Failed to write to stdin");
         stdin.flush().expect("Failed to flush stdin");
+        // Dropping stdin here explicitly closes it
     }
 
     let output = child.wait_with_output().expect("Failed to read output");
+    
+    // Check for errors
+    if !output.status.success() {
+        eprintln!("extract-paths failed with stderr: {}", String::from_utf8_lossy(&output.stderr));
+    }
+    
     String::from_utf8_lossy(&output.stdout).to_string()
 }
