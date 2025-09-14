@@ -18,9 +18,13 @@ jobs:
       - uses: actions/checkout@v4
       - name: Create Release
         run: |
-          gh release create ${{ github.ref_name }} \
-            --title "Release ${{ github.ref_name }}" \
-            --generate-notes
+          if gh release view ${{ github.ref_name }} >/dev/null 2>&1; then
+            echo "Release ${{ github.ref_name }} already exists, skipping creation"
+          else
+            gh release create ${{ github.ref_name }} \
+              --title "Release ${{ github.ref_name }}" \
+              --generate-notes
+          fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -70,7 +74,8 @@ jobs:
     - name: Upload Release Asset
       run: |
         gh release upload ${{ github.ref_name }} \
-          ./target/${{ matrix.target }}/release/${{ matrix.artifact_name }}#${{ matrix.asset_name }}
+          ./target/${{ matrix.target }}/release/${{ matrix.artifact_name }}#${{ matrix.asset_name }} \
+          --clobber
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
