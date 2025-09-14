@@ -1,4 +1,4 @@
-.PHONY: help install install-cargo install-binstall build test clean release tag-release patch actions status ensure-build
+.PHONY: help install install-cargo install-binstall build test clean release tag-release patch actions action status ensure-build
 
 # Default target
 help:
@@ -12,7 +12,8 @@ help:
 	@echo "  release       - Build in release mode"
 	@echo "  tag-release   - Create and push git tag (VERSION=x.y.z or auto-increment minor)"
 	@echo "  patch         - Increment patch version and create tag"
-	@echo "  actions       - Open currently running GitHub Action for latest tag"
+	@echo "  actions       - Open general GitHub Actions page"
+	@echo "  action        - Open currently running GitHub Action for latest tag"
 	@echo "  status        - Show success/failure status of latest tag release (CLI only)"
 	@echo "  ensure-build  - Build project and stage Cargo.lock for commit"
 
@@ -111,8 +112,21 @@ patch: ensure-build
 	git push origin main; \
 	git push origin v$$NEW_VERSION
 
-# Open currently running GitHub Action for the latest tag
+# Open general GitHub Actions page
 actions:
+	@echo "Opening GitHub Actions page..."
+	@REPO_URL=$$(git remote get-url origin 2>/dev/null || echo ""); \
+	if [ -z "$$REPO_URL" ]; then \
+		echo "Error: No git remote origin found"; \
+		exit 1; \
+	fi; \
+	GITHUB_URL=$$(echo $$REPO_URL | sed 's/\.git$$//' | sed 's/^git@github\.com:/https:\/\/github.com\//'); \
+	ACTIONS_URL="$$GITHUB_URL/actions"; \
+	echo "Opening: $$ACTIONS_URL"; \
+	open "$$ACTIONS_URL"
+
+# Open currently running GitHub Action for the latest tag
+action:
 	@echo "Finding currently running action for latest tag..."
 	@REPO_URL=$$(git remote get-url origin 2>/dev/null || echo ""); \
 	if [ -z "$$REPO_URL" ]; then \
