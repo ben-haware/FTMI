@@ -1,6 +1,6 @@
 [package]
 name = "ftmi"
-version = "0.2.7"
+version = "0.2.8"
 edition = "2021"
 authors = ["Your Name <your.email@example.com>"]
 description = "A Rust-based file renaming utility"
