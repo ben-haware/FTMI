@@ -124,7 +124,7 @@ ftmi rename --list
      [Dua Lipa] Don't Start Now.mp3 → Don't Start Now.mp3
      [Dua Lipa] Physical.mp3 → Physical.mp3
 
-💡 Use 'rename --undo <operation_id>' to undo any operation.
+💡 Use 'ftmi rename --undo <operation_id>' to undo any operation.
 ```
 
 ### Custom Patterns
@@ -190,8 +190,28 @@ EXAMPLES:
 
 ### Analysis Tools
 ```bash
-ftmi                     # Find longest prefixes (analysis only)
-echo "./music" | ftmi    # Pipe directory paths for analysis
+ftmi analyze                       # Find longest prefixes (analysis only)
+echo "./music" | ftmi analyze      # Pipe directory paths for analysis
+ftmi                              # Shows help (default behavior)
+```
+
+### Additional Tools
+```bash
+# Extract file paths from text
+ftmi extract-paths < logfile.txt
+
+# Find delimited prefixes like [Artist], (Draft)
+ftmi find-delimited ./photos
+
+# Search for specific prefix patterns
+ftmi find-specific --prefix IMG_ ./photos
+
+# Detect all common prefixes automatically
+ftmi detect-all ./mixed_files
+
+# Preview prefix removal operations (no undo support)
+ftmi remove-prefix ./music
+ftmi remove-prefix --execute ./music    # Actually perform renames
 ```
 
 ## 🔧 Advanced Usage
@@ -249,7 +269,13 @@ tracked_rename(&db, &old_path, &new_path, &prefix, &operation_id)?;
 **Main Tool:**
 - `ftmi` - **Main CLI with subcommands**
   - `ftmi rename` - **Interactive prefix removal tool (primary)**
-  - `ftmi` (default) - Prefix analysis and detection
+  - `ftmi analyze` - Prefix analysis and detection
+  - `ftmi extract-paths` - Extract file paths from text
+  - `ftmi find-delimited` - Find delimited prefixes
+  - `ftmi find-specific` - Search for specific prefixes
+  - `ftmi detect-all` - Detect all common prefixes
+  - `ftmi remove-prefix` - Preview prefix removal
+  - `ftmi` (default) - Shows help
 
 **Database:**
 - SQLite database in `~/.ftmi/renames.db`
@@ -267,6 +293,8 @@ See [LICENSE](LICENSE) for details.
 
 ## 🛣 Recent Updates
 
+- ✅ **Single binary architecture** - All tools consolidated into `ftmi` with subcommands
+- ✅ **Complete subcommand suite** - rename, analyze, extract-paths, find-delimited, etc.
 - ✅ **Full undo system** with SQLite tracking
 - ✅ **Continuous mode** for batch processing  
 - ✅ **Preview before rename** and undo
@@ -274,3 +302,4 @@ See [LICENSE](LICENSE) for details.
 - ✅ **200ms debounce** for smooth UX
 - ✅ **Multiple prefix handling** for tied results
 - ✅ **Configurable regex filtering**
+- ✅ **Improved build system** with version management
