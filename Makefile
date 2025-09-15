@@ -1,4 +1,4 @@
-.PHONY: help install install-cargo install-binstall build test clean release tag-release patch actions action status ensure-build
+.PHONY: help install install-cargo install-binstall build test clean release tag-release patch actions action status ensure-build crates
 
 # Default target
 help:
@@ -16,6 +16,7 @@ help:
 	@echo "  action        - Open currently running GitHub Action for latest tag"
 	@echo "  status        - Show success/failure status of latest tag release (CLI only)"
 	@echo "  ensure-build  - Build project and stage Cargo.lock for commit"
+	@echo "  crates        - Open crates.io page for this package"
 
 # Full installation
 install: install-cargo install-binstall
@@ -185,3 +186,10 @@ status:
 		running) echo "🔄 Overall Status: RUNNING - Workflows still in progress" ;; \
 		*) echo "❓ Overall Status: UNKNOWN" ;; \
 	esac
+
+# Open crates.io page for this package
+crates:
+	@echo "Opening crates.io page for ftmi..."
+	@CRATES_URL="https://crates.io/crates/ftmi"; \
+	echo "Opening: $$CRATES_URL"; \
+	open "$$CRATES_URL"
