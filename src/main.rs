@@ -8,12 +8,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     if args.len() > 1 {
         match args[1].as_str() {
             "rename" => {
-                // Execute the rename functionality
-                let rename_args: Vec<String> = args[0..1].iter().chain(args[2..].iter()).cloned().collect();
-                env::set_var("CARGO_PKG_NAME", "ftmi-rename");
-                
-                // Import and call the rename main function
-                return ftmi::rename_main(rename_args);
+                return ftmi::subcommands::rename_command(args);
             }
             "analyze" => {
                 // Execute the analysis functionality

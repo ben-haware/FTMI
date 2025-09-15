@@ -88,17 +88,18 @@ fn test_no_paths() {
     assert_eq!(output.trim(), "");
 }
 
-// Helper function to run ftmi with input
+// Helper function to run ftmi extract-paths with input
 fn run_ftmi(input: &str) -> String {
-    // Use the compiled binary directly instead of cargo run
-    let binary_path = env!("CARGO_BIN_EXE_extract-paths");
+    // Use the main ftmi binary with extract-paths subcommand
+    let binary_path = env!("CARGO_BIN_EXE_ftmi");
     
     let mut child = Command::new(binary_path)
+        .arg("extract-paths")
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
         .spawn()
-        .expect("Failed to start extract-paths");
+        .expect("Failed to start ftmi extract-paths");
 
     // Write input and explicitly close stdin
     if let Some(mut stdin) = child.stdin.take() {
@@ -111,7 +112,7 @@ fn run_ftmi(input: &str) -> String {
     
     // Check for errors
     if !output.status.success() {
-        eprintln!("extract-paths failed with stderr: {}", String::from_utf8_lossy(&output.stderr));
+        eprintln!("ftmi extract-paths failed with stderr: {}", String::from_utf8_lossy(&output.stderr));
     }
     
     String::from_utf8_lossy(&output.stdout).to_string()
